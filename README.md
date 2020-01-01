@@ -75,4 +75,5 @@ npm i element-ui -S
 >建议使用 CDN 引入 Element 的用户在链接地址上锁定版本，以免将来 Element 升级时受到非兼容性更新的影响。锁定版本的方法请查看 unpkg.com。
 
 ### 1.3 [图像化界面安装](https://www.bilibili.com/video/av50680998?p=345)
+详情见bilibili教程
 
