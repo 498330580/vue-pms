@@ -45,6 +45,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 + src → 组件源码目录
     + assets 静态资源（图片、样式表等）
     + components 组件目录
+    + plugins 插件配置目录
     + router 路由
         + index.js 路由配置文件
     + store 
