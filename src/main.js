@@ -12,7 +12,11 @@ import './assets/css/ali/iconfont.css'
 
 // 导入请求包
 import axios from 'axios'
-axios.defaults.baseURL = 'http://127.0.0.1:8888/' // 全局api地址
+axios.defaults.baseURL = 'http://ceshi.yaoling.com:8888/' // 全局api地址
+axios.interceptors.request.use(config => {
+  config.headers.Authorization = 'Token ' + window.sessionStorage.getItem('pmstoken')
+  return config
+})
 Vue.prototype.$http = axios
 
 Vue.config.productionTip = false

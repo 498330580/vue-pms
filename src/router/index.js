@@ -51,7 +51,7 @@ router.beforeEach((to, from, next) => {
   //   next()  放行  next('/login')  强制跳转
   if (to.path === '/login') return next()
   // 获取token
-  const tokenStr = window.sessionStorage.getItem('token')
+  const tokenStr = window.sessionStorage.getItem('pmstoken')
   if (!tokenStr) return next('/login')
   next()
 })

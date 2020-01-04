@@ -10,16 +10,19 @@
         <!-- :model绑定数据  ：rules表单验证  ：ref引用，做数据重置 -->
         <!--用户名-->
         <el-form-item prop="username">
-          <el-input v-model="loginform.username" prefix-icon="el-icon-user" placeholder="请输入用户名" @keyup.enter.native="login"/>
+          <el-input v-model="loginform.username" prefix-icon="el-icon-user" placeholder="请输入用户名"
+                    @keyup.enter.native="login"/>
         </el-form-item>
         <!--密码-->
         <el-form-item v-if="formpassword" prop="password">
-          <el-input type="password" prefix-icon="el-icon-lock" v-model="loginform.password" placeholder="请输入密码" @keyup.enter.native="login">
+          <el-input type="password" prefix-icon="el-icon-lock" v-model="loginform.password" placeholder="请输入密码"
+                    @keyup.enter.native="login">
             <i slot="suffix" class="iconfont icon-icon-test1" @click="changpass"/>
           </el-input>
         </el-form-item>
         <el-form-item v-else prop="password">
-          <el-input type="text" prefix-icon="el-icon-lock" v-model="loginform.password" placeholder="请输入密码" @keyup.enter.native="login">
+          <el-input type="text" prefix-icon="el-icon-lock" v-model="loginform.password" placeholder="请输入密码"
+                    @keyup.enter.native="login">
             <i slot="suffix" class="iconfont icon-icon-test" @click="changpass"/>
           </el-input>
         </el-form-item>
@@ -79,7 +82,7 @@ export default {
               // 储存token到本地localStorag中，关闭浏览器不会消失
               // window.localStorage.setItem('JWT', req.data.token)
               // 储存token到本地sessionStorage中，关闭浏览器会消失，一般适用于token
-              window.sessionStorage.setItem('token', req.data.token)
+              window.sessionStorage.setItem('pmstoken', req.data.token)
               this.$message.success('登录成功')
               // 登录成功后跳转到主页
               this.$router.push('/home')
@@ -95,50 +98,52 @@ export default {
 </script>
 
 <style lang="less" scoped>
-  .login-container{
-    background-color: #2d3a4b;
-    height: 100%;
-  }
-  .login-box{
-    width: 450px;
-    height: 300px;
-    background-color: #eeeeee;
-    border-radius: 3px;
+.login-container {
+  background-color: #2d3a4b;
+  height: 100%;
+}
+
+.login-box {
+  width: 450px;
+  height: 300px;
+  background-color: #eeeeee;
+  border-radius: 3px;
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+
+  .logo-box {
+    height: 130px;
+    width: 130px;
+    border: 1px solid #eeeeee;
+    border-radius: 50%;
+    padding: 10px;
+    box-shadow: 0 0 10px #dddddd;
     position: absolute;
     left: 50%;
-    top: 50%;
     transform: translate(-50%, -50%);
+    background-color: #ffffff;
 
-    .logo-box{
-      height: 130px;
-      width: 130px;
-      border: 1px solid #eeeeee;
+    img {
+      width: 100%;
+      height: 100%;
       border-radius: 50%;
-      padding: 10px;
-      box-shadow: 0 0 10px #dddddd;
-      position: absolute;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background-color: #ffffff;
-      img{
-        width: 100%;
-        height: 100%;
-        border-radius: 50%;
-        background-color: #eeeeee;
-      }
+      background-color: #eeeeee;
     }
   }
+}
 
-  .button{
-    display: flex;
-    justify-content: flex-end;
-  }
+.button {
+  display: flex;
+  justify-content: flex-end;
+}
 
-  .login-form{
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    padding: 0 20px;
-    box-sizing: border-box;
-  }
+.login-form {
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
 </style>
