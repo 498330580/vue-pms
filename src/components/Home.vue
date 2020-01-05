@@ -22,47 +22,19 @@
           text-color="#fff"
           active-text-color="#ffd04b">
           <!-- 一级菜单 -->
-          <el-submenu index="1">
+          <el-submenu v-for="(item,index) in menulist" :key="index" :index="String(index+1)">
             <template slot="title">
-              <i class="el-icon-user-solid"/>
-              <span>人员信息</span>
+              <i :class="item.class_img"/>
+              <span>{{ item.name }}</span>
             </template>
-            <el-menu-item index="1-1">
+            <el-menu-item v-for="(item2, index2) in item.sub_cat" :key="index2"
+                          :index="String(index+1)+'-'+String(index2+1)">
               <template slot="title">
-                <i class="el-icon-s-custom"/>
-                <span>账号信息</span>
+                <i :class="item2.class_img"/>
+                <span>{{ item2.name }}</span>
               </template>
             </el-menu-item>
-            <el-menu-item index="1-2" @click="plist">
-              <template slot="title">
-                <i class="el-icon-user"/>
-                <span>个人信息</span>
-              </template>
-            </el-menu-item>
-            <!--
-            <el-menu-item-group title="分组2">
-              <el-menu-item index="1-3">选项3</el-menu-item>
-            </el-menu-item-group>
-            <el-submenu index="1-4">
-              <template slot="title">选项4</template>
-              <el-menu-item index="1-4-1">选项1</el-menu-item>
-            </el-submenu>
-            -->
           </el-submenu>
-          <!--
-          <el-menu-item index="2">
-            <i class="el-icon-menu"></i>
-            <span slot="title">导航二</span>
-          </el-menu-item>
-          <el-menu-item index="3" disabled>
-            <i class="el-icon-document"></i>
-            <span slot="title">导航三</span>
-          </el-menu-item>
-          <el-menu-item index="4">
-            <i class="el-icon-setting"></i>
-            <span slot="title">导航四</span>
-          </el-menu-item>
-          -->
         </el-menu>
       </el-aside>
       <el-container>
@@ -75,6 +47,11 @@
 
 <script>
 export default {
+  data () {
+    return {
+      menulist: ''
+    }
+  },
   methods: {
     logout () {
       window.sessionStorage.clear()
@@ -94,7 +71,18 @@ export default {
         .catch(error => {
           console.log(error)
         })
+    },
+    async menu () {
+      await this.$http.get('api/Menu')
+        .then(req => {
+          this.menulist = req.data
+          console.log(req.data)
+        })
+        .catch(error => console.log(error))
     }
+  },
+  created () {
+    this.menu()
   }
 }
 </script>

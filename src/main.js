@@ -12,6 +12,7 @@ import './assets/css/ali/iconfont.css'
 
 // 导入请求包
 import axios from 'axios'
+
 axios.defaults.baseURL = 'http://ceshi.yaoling.com:8888/' // 全局api地址
 axios.interceptors.request.use(config => {
   config.headers.Authorization = 'Token ' + window.sessionStorage.getItem('pmstoken')
