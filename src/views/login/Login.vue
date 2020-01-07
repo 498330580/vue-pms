@@ -87,8 +87,18 @@ export default {
               // 登录成功后跳转到主页
               this.$router.push('/home')
             })
-            .catch(() => {
-              this.$message.warning('登录失败')
+            .catch((error) => {
+              if (error.response) {
+                if (error.response.status === 400) {
+                  this.$message.warning('用户名或密码错误')
+                  console.log(error.response.data.non_field_errors[0])
+                }
+              } else {
+                this.$message.error('错误:未获得服务器返回数据。')
+              }
+              // console.log(error.response.status)
+              // console.log(error.response.data)
+              // console.log(error.response.headers)
             })
         }
       })

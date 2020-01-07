@@ -23,20 +23,20 @@
           active-text-color="#ffd04b">
           <!-- 一级菜单 -->
           <div v-for="(item,index) in menulist" :key="index">
-            <el-submenu v-if="item.sub_cat.length > 0" :index="String(index+1)">
+            <el-submenu v-if="item.is_look && item.sub_cat.length > 0" :index="String(index+1)">
               <template slot="title">
                 <i :class="item.class_img"/>
                 <span>{{ item.name }}</span>
               </template>
               <el-menu-item v-for="(item2, index2) in item.sub_cat" :key="index2"
                             :index="String(index+1)+'-'+String(index2+1)">
-                <template slot="title">
+                <template slot="title" v-if="item2.is_look">
                   <i :class="item2.class_img"/>
                   <span>{{ item2.name }}</span>
                 </template>
               </el-menu-item>
             </el-submenu>
-            <el-menu-item v-else :index="String(index+1)">
+            <el-menu-item v-else-if="item.is_look" :index="String(index+1)">
               <i :class="item.class_img"/>
               <span slot="title">{{ item.name }}</span>
             </el-menu-item>
