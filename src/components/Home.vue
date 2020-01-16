@@ -12,23 +12,32 @@
 
     <el-container>
       <!-- 侧边栏 -->
-      <el-aside width="200px">
+      <el-aside :width="isCollapse ? '64px' : '200px'">
         <!-- 菜单区域 -->
+        <div class="toggle-button">
+          <span @click="menubutton">
+            <i v-if="isCollapse" class="el-icon-d-arrow-right"/>
+            <i v-else class="el-icon-d-arrow-left"/>
+          </span>
+        </div>
         <el-menu
           class="el-menu-vertical-demo"
           @open="handleOpen"
           @close="handleClose"
           background-color="#545c64"
           text-color="#fff"
-          active-text-color="#ffd04b">
+          active-text-color="#ffd04b"
+          :unique-opened="true"
+          :collapse="isCollapse"
+          :collapse-transition="false"
+          v-for="(item,index) in menulist" :key="item.id">
           <!-- 一级菜单 -->
-          <div v-for="(item,index) in menulist" :key="index">
             <el-submenu v-if="item.is_look && item.sub_cat.length > 0" :index="String(index+1)">
               <template slot="title">
                 <i :class="item.class_img"/>
                 <span>{{ item.name }}</span>
               </template>
-              <el-menu-item v-for="(item2, index2) in item.sub_cat" :key="index2"
+              <el-menu-item v-for="(item2, index2) in item.sub_cat" :key="item2.id"
                             :index="String(index+1)+'-'+String(index2+1)">
                 <template slot="title" v-if="item2.is_look">
                   <i :class="item2.class_img"/>
@@ -36,15 +45,16 @@
                 </template>
               </el-menu-item>
             </el-submenu>
-            <el-menu-item v-else-if="item.is_look" :index="String(index+1)">
+            <el-menu-item v-else :index="String(index+1)">
               <i :class="item.class_img"/>
               <span slot="title">{{ item.name }}</span>
             </el-menu-item>
-          </div>
         </el-menu>
       </el-aside>
       <el-container>
-        <el-main>Main</el-main>
+        <el-main>
+          <router-view/>
+        </el-main>
         <!--        <el-footer>Footer</el-footer>-->
       </el-container>
     </el-container>
@@ -55,7 +65,9 @@
 export default {
   data () {
     return {
-      menulist: ''
+      menulist: '',
+      // 默认打开折叠菜单
+      isCollapse: false
     }
   },
   methods: {
@@ -85,6 +97,10 @@ export default {
           console.log(req.data)
         })
         .catch(error => console.log(error))
+    },
+    // 菜单折叠判断
+    menubutton () {
+      this.isCollapse = !this.isCollapse
     }
   },
   created () {
@@ -133,20 +149,32 @@ export default {
   background-color: #545c64;
   color: #eeeeee;
   /*text-align: center;*/
-  line-height: 200px;
+  /*line-height: 200px;*/
+  .el-menu {
+    border-right: none;
+  }
 }
 
-.el-main {
-  background-color: #E9EEF3;
-  color: #333;
-  text-align: center;
-  line-height: 160px;
-}
+/*.el-main {*/
+/*  background-color: #E9EEF3;*/
+/*  color: #333;*/
+/*  text-align: center;*/
+/*  line-height: 160px;*/
+/*}*/
 
 .el-container {
   height: 100%;
   width: 100%;
+  margin-right: 10px;
   /*margin-bottom: 40px;*/
+}
+
+.toggle-button {
+  font-size: 15px;
+  line-height: 24px;
+  color: #ffffff;
+  text-align: center;
+  cursor: pointer;
 }
 
 /*.el-container:nth-child(5) .el-aside,*/
