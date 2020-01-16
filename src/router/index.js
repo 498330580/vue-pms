@@ -3,6 +3,8 @@ import VueRouter from 'vue-router'
 import Home from '../components/Home'
 import Login from '../views/login/Login'
 import Welcome from '../components/Welcome'
+import User from '../views/personal/User'
+import Username from '../views/personal/Username'
 
 Vue.use(VueRouter)
 
@@ -40,7 +42,9 @@ const routes = [
     redirect: '/welcome',
     children: [
       // 后台首页
-      { path: '/welcome', name: 'welcome', component: Welcome }
+      { path: '/welcome', name: 'welcome', component: Welcome },
+      { path: '/user', name: 'user', component: User },
+      { path: '/username', name: 'username', component: Username }
     ]
   }
 ]

@@ -33,22 +33,22 @@
           v-for="item in menulist" :key="item.id"
           :router="true">
           <!-- 一级菜单 -->
-            <el-submenu v-if="item.is_look && item.sub_cat.length > 0" :index="item.path">
-              <template slot="title">
-                <i :class="item.class_img"/>
-                <span>{{ item.name }}</span>
-              </template>
-              <el-menu-item v-for="item2 in item.sub_cat" :key="item2.id" :index="item2.path">
-                <template slot="title" v-if="item2.is_look">
-                  <i :class="item2.class_img"/>
-                  <span>{{ item2.name }}</span>
-                </template>
-              </el-menu-item>
-            </el-submenu>
-            <el-menu-item v-else :index="item.path">
+          <el-submenu v-if="item.is_look && item.sub_cat.length > 0" :index="item.path">
+            <template slot="title">
               <i :class="item.class_img"/>
-              <span slot="title">{{ item.name }}</span>
+              <span>{{ item.name }}</span>
+            </template>
+            <el-menu-item v-for="item2 in item.sub_cat" :key="item2.id" :index="item2.path">
+              <template slot="title" v-if="item2.is_look">
+                <i :class="item2.class_img"/>
+                <span>{{ item2.name }}</span>
+              </template>
             </el-menu-item>
+          </el-submenu>
+          <el-menu-item v-else :index="item.path">
+            <i :class="item.class_img"/>
+            <span slot="title">{{ item.name }}</span>
+          </el-menu-item>
         </el-menu>
       </el-aside>
       <el-container>
@@ -150,6 +150,7 @@ export default {
   color: #eeeeee;
   /*text-align: center;*/
   /*line-height: 200px;*/
+
   .el-menu {
     border-right: none;
   }
