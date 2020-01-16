@@ -39,6 +39,7 @@ const routes = [
     component: Home,
     redirect: '/welcome',
     children: [
+      // 后台首页
       { path: '/welcome', name: 'welcome', component: Welcome }
     ]
   }
