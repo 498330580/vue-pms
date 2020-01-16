@@ -30,32 +30,32 @@
           :unique-opened="true"
           :collapse="isCollapse"
           :collapse-transition="false"
-          v-for="(item,index) in menulist" :key="item.id">
+          v-for="item in menulist" :key="item.id"
+          :router="true">
           <!-- 一级菜单 -->
-            <el-submenu v-if="item.is_look && item.sub_cat.length > 0" :index="String(index+1)">
+            <el-submenu v-if="item.is_look && item.sub_cat.length > 0" :index="item.path">
               <template slot="title">
                 <i :class="item.class_img"/>
                 <span>{{ item.name }}</span>
               </template>
-              <el-menu-item v-for="(item2, index2) in item.sub_cat" :key="item2.id"
-                            :index="String(index+1)+'-'+String(index2+1)">
+              <el-menu-item v-for="item2 in item.sub_cat" :key="item2.id" :index="item2.path">
                 <template slot="title" v-if="item2.is_look">
                   <i :class="item2.class_img"/>
                   <span>{{ item2.name }}</span>
                 </template>
               </el-menu-item>
             </el-submenu>
-            <el-menu-item v-else :index="String(index+1)">
+            <el-menu-item v-else :index="item.path">
               <i :class="item.class_img"/>
               <span slot="title">{{ item.name }}</span>
             </el-menu-item>
         </el-menu>
       </el-aside>
       <el-container>
+        <!-- 主体区域 -->
         <el-main>
           <router-view/>
         </el-main>
-        <!--        <el-footer>Footer</el-footer>-->
       </el-container>
     </el-container>
   </el-container>
@@ -65,7 +65,7 @@
 export default {
   data () {
     return {
-      menulist: '',
+      menulist: [],
       // 默认打开折叠菜单
       isCollapse: false
     }
