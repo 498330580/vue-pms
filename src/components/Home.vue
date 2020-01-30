@@ -27,6 +27,7 @@
           background-color="#545c64"
           text-color="#fff"
           active-text-color="#ffd04b"
+          :default-active="menupath"
           :unique-opened="true"
           :collapse="isCollapse"
           :collapse-transition="false"
@@ -38,14 +39,15 @@
               <i :class="item.class_img"/>
               <span>{{ item.name }}</span>
             </template>
-            <el-menu-item v-for="item2 in item.sub_cat" :key="item2.id" :index="item2.path">
+            <el-menu-item v-for="item2 in item.sub_cat" :key="item2.id" :index="item2.path"
+                          @click="sevemenupath(item2.path,[item.name, item2.name])">
               <template slot="title" v-if="item2.is_look">
                 <i :class="item2.class_img"/>
                 <span>{{ item2.name }}</span>
               </template>
             </el-menu-item>
           </el-submenu>
-          <el-menu-item v-else :index="item.path">
+          <el-menu-item v-else :index="item.path" @click="sevemenupath(item.path, [item.name])">
             <i :class="item.class_img"/>
             <span slot="title">{{ item.name }}</span>
           </el-menu-item>
@@ -54,7 +56,14 @@
       <el-container>
         <!-- 主体区域 -->
         <el-main>
-          <router-view/>
+            <el-breadcrumb separator-class="el-icon-arrow-right" v-if="breadcrumb.length >= 1">
+              <el-breadcrumb-item :to="{ path: '/' }">首页</el-breadcrumb-item>
+              <el-breadcrumb-item>{{ breadcrumb[0] }}</el-breadcrumb-item>
+              <el-breadcrumb-item v-if="breadcrumb.length >= 2">{{ breadcrumb[1] }}</el-breadcrumb-item>
+            </el-breadcrumb>
+          <el-card>
+            <router-view  @breadcrumb="showbreadcrumb"/>
+          </el-card>
         </el-main>
       </el-container>
     </el-container>
@@ -67,11 +76,14 @@ export default {
     return {
       menulist: [],
       // 默认打开折叠菜单
-      isCollapse: false
+      isCollapse: false,
+      menupath: '',
+      breadcrumb: []
     }
   },
   methods: {
     logout () {
+      // 退出登录，清除登录信息，并跳转到登录页面
       window.sessionStorage.clear()
       this.$router.push('/login')
     },
@@ -81,30 +93,38 @@ export default {
     handleClose (key, keyPath) {
       console.log(key, keyPath)
     },
-    async plist () {
-      this.$http.get('api/PersonalInformationList')
-        .then(req => {
-          console.log(req)
-        })
-        .catch(error => {
-          console.log(error)
-        })
-    },
     async menu () {
-      await this.$http.get('api/Menu')
+      await this.$http.get('Menu')
         .then(req => {
           this.menulist = req.data
-          console.log(req.data)
         })
         .catch(error => console.log(error))
     },
     // 菜单折叠判断
     menubutton () {
       this.isCollapse = !this.isCollapse
+    },
+    sevemenupath (path, breadcrumb) {
+      // 储存到sess中防止刷新页面菜单定位失败
+      window.sessionStorage.setItem('pmsmenupath', path)
+      window.sessionStorage.setItem('breadcrumb', breadcrumb)
+      this.menupath = path
+      this.breadcrumb = breadcrumb
+    },
+    showbreadcrumb () {
+      // 此方法传递给子组件，将菜单路径与面包屑的值重置为初始值
+      this.menupath = ''
+      this.breadcrumb = []
     }
   },
   created () {
     this.menu()
+    if (window.sessionStorage.getItem('pmsmenupath')) {
+      this.menupath = window.sessionStorage.getItem('pmsmenupath')
+    }
+    if (window.sessionStorage.getItem('breadcrumb')) {
+      this.breadcrumb = window.sessionStorage.getItem('breadcrumb').split(',')
+    }
   }
 }
 </script>
@@ -168,6 +188,7 @@ export default {
   width: 100%;
   margin-right: 10px;
   /*margin-bottom: 40px;*/
+  background-color: #eeeeee;
 }
 
 .toggle-button {

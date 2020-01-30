@@ -83,6 +83,8 @@ export default {
               // window.localStorage.setItem('JWT', req.data.token)
               // 储存token到本地sessionStorage中，关闭浏览器会消失，一般适用于token
               window.sessionStorage.setItem('pmstoken', req.data.token)
+              window.sessionStorage.setItem('superuser', req.data.superuser)
+              console.log(req.data)
               this.$message.success('登录成功')
               // 登录成功后跳转到主页
               this.$router.push('/home')

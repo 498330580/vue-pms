@@ -6,7 +6,12 @@
 
 <script>
 export default {
-  name: 'Welcome'
+  name: 'Welcome',
+  created () {
+    window.sessionStorage.removeItem('breadcrumb')
+    window.sessionStorage.removeItem('pmsmenupath')
+    this.$emit('breadcrumb')
+  }
 }
 </script>
 
