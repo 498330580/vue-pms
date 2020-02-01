@@ -82,6 +82,7 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
+              <!--  -->
               <el-form-item label="账号" v-if="addswitch" prop="user">
                 <el-select v-model="addForm.user" placeholder="请选择未分配账号">
                   <el-option label="不创建" value="1"/>
