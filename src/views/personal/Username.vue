@@ -82,10 +82,10 @@
               </el-form-item>
             </el-col>
             <el-col :span="12">
-              <el-form-item label="账号" v-if="addswitch">
+              <el-form-item label="账号" v-if="addswitch" prop="user">
                 <el-select v-model="addForm.user" placeholder="请选择未分配账号">
-                  <el-option label="不创建" value="不创建"/>
-                  <el-option label="区域二" value="beijing"/>
+                  <el-option label="不创建" value="1"/>
+                  <el-option label="区域二" value="2"/>
                 </el-select>
               </el-form-item>
             </el-col>
@@ -164,9 +164,12 @@ export default {
       active: 0,
       addForm: {},
       addrules: {
+        user: [
+          { required: true, message: '请选择活动区域', trigger: 'change' }
+        ],
         name: [
           { required: true, message: '请输入姓名', trigger: 'blur' },
-          { min: 3, max: 5, message: '长度在 2 到 5 个字符', trigger: 'blur' }
+          { min: 2, max: 5, message: '长度在 2 到 5 个字符', trigger: 'blur' }
         ],
         named: [
           { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
@@ -253,10 +256,11 @@ export default {
     },
     addswitchm () {
       // 判断是否可以选择账号
-      if (this.addswitch) {
-        this.addForm = {}
+      if (!this.addswitch) {
+        // this.addForm = {}
+        this.addForm.user = 1
       } else {
-        this.addForm = { 'user': 1 }
+        this.addForm.user = ''
       }
     },
     prev () {
