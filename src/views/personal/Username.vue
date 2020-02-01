@@ -84,8 +84,7 @@
             <el-col :span="12">
               <el-form-item label="账号" v-if="addswitch" prop="user">
                 <el-select v-model="addForm.user" placeholder="请选择未分配账号">
-                  <el-option label="不创建" value="1"/>
-                  <el-option label="区域二" value="2"/>
+                  <el-option v-for="user in dataselect" :key="user.id" :label=user.username :value="user.id"/>
                 </el-select>
               </el-form-item>
             </el-col>
@@ -119,20 +118,12 @@
               </el-form-item>
             </el-col>
           </el-row>
-          <!--        <el-form-item>-->
-          <!--          <el-button @click="quxiao('addForm')">取 消</el-button>-->
-          <!--          <el-button @click="submitForm('addForm')" type="primary">下一步</el-button>-->
-          <!--        </el-form-item>-->
         </el-form>
       </el-card>
       <!--  数据确认区域  -->
       <el-card v-if="active===1">
         <el-form label-width="80px">
           {{addForm}}
-          <!--        <el-form-item>-->
-          <!--          <el-button style="margin-top: 12px;" @click="prev">上一步</el-button>-->
-          <!--          <el-button type="primary" @click="tijiao('addForm')">提 交</el-button>-->
-          <!--        </el-form-item>-->
         </el-form>
       </el-card>
       <!--  底部确认区域  -->
@@ -158,6 +149,7 @@ export default {
       count: null,
       // 添加数据
       // addselect: true,
+      dataselect: [],
       addswitch: false,
       formpassword: true,
       addData: false,
@@ -212,6 +204,21 @@ export default {
           console.log(error)
         })
     },
+    unlist: async function () {
+      await this.$http.get('UserInformationNoneList')
+        .then(req => {
+          this.dataselect = req.data
+          if (this.dataselect.length === 0) {
+            this.addswitch = false
+            this.dataselect = []
+            this.$message.warning('无未关联账号')
+          }
+        })
+        .catch(error => {
+          this.$message.warning('获取数据失败')
+          console.log(error)
+        })
+    },
     getAge (teacherBirthday) {
       // 根据生日判断用户年龄
       let birthdays = new Date(teacherBirthday.replace(/-/g, '/'))
@@ -240,10 +247,12 @@ export default {
       this.addData = false
       this.$refs[formName].resetFields()
       this.addForm = { 'user': 1 }
+      this.dataselect = []
     },
     tijiao () {
       this.addswitch = false
       this.addData = false
+      this.dataselect = []
     },
     addfrom () {
       this.active = 0
@@ -259,7 +268,9 @@ export default {
       if (!this.addswitch) {
         // this.addForm = {}
         this.addForm.user = 1
+        this.dataselect = []
       } else {
+        this.unlist()
         this.addForm.user = ''
       }
     },
