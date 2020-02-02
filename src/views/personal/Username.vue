@@ -183,7 +183,7 @@ export default {
           // { type: 'number', message: '请输入数字', trigger: 'blur' },
           { min: 11, max: 11, message: '长为11个字符', trigger: 'blur' },
           {
-            pattern: /^1(3|4|5|6|7|8|9)\d{9}$/,
+            pattern: /^1([3456789])\d{9}$/,
             message: '手机号格式不对',
             trigger: 'blur'
           }
@@ -259,7 +259,6 @@ export default {
     quxiao () {
       this.addswitch = false
       this.addData = false
-      // this.$refs[formName].resetFields()
       this.$refs.addForm.resetFields()
       this.addForm = { 'user': 1 }
       this.dataselect = []
@@ -283,7 +282,7 @@ export default {
             this.$message.warning(err.response.data.message)
           }
           if (err.response.status === 400) {
-            var x
+            let x
             for (x in err.response.data) {
               this.$message.warning('' + err.response.data[x])
             }
@@ -313,7 +312,7 @@ export default {
     prev () {
       if (--this.active > 1) this.active = 0
     },
-    submitForm (formName) {
+    submitForm () {
       this.$refs.addForm.validate((valid) => {
         if (valid) {
           if (this.active++ > 1) this.active = 0
