@@ -168,10 +168,12 @@ export default {
         ],
         idnumber: [
           { required: true, message: '请输入身份证', trigger: 'blur' },
+          { type: 'number', message: '请输入数字', trigger: 'blur' },
           { min: 18, max: 18, message: '长为18个字符', trigger: 'blur' }
         ],
         mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
+          { type: 'number', message: '请输入数字', trigger: 'blur' },
           { min: 11, max: 11, message: '长为11个字符', trigger: 'blur' }
         ],
         permanent: [
