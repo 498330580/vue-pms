@@ -62,7 +62,8 @@
     <el-dialog
       title="添加个人数据"
       :visible.sync="addData"
-      width="60%"
+      width="60%" :show-close="false" :destroy-on-close="true" :close-on-press-escape="false"
+      :close-on-click-modal="false"
       center>
       <el-steps :active="active" finish-status="success" align-center>
         <el-step title="填写数据" description="填写数据"/>
@@ -70,6 +71,7 @@
       </el-steps>
       <el-card v-if="active===0">
         <!--  内容区域  -->
+<!--        <span>带*号为必填项</span>-->
         <el-form :model="addForm" :rules="addrules" ref="addForm" label-width="80px">
           <el-row :gutter="24">
             <el-col :span="12">
@@ -128,10 +130,10 @@
       </el-card>
       <!--  底部确认区域  -->
       <span slot="footer" class="dialog-footer">
-          <el-button @click="quxiao('addForm')" v-if="active===0">取  消</el-button>
+          <el-button @click="quxiao" v-if="active===0">取  消</el-button>
           <el-button style="margin-top: 12px;" @click="prev" v-if="active!==0">上一步</el-button>
-          <el-button style="margin-top: 12px;" @click="submitForm('addForm')" v-if="active!==1">下一步</el-button>
-          <el-button type="primary" @click="tijiao('addForm')" v-if="active===1">提  交</el-button>
+          <el-button style="margin-top: 12px;" @click="submitForm" v-if="active!==1">下一步</el-button>
+          <el-button type="primary" @click="tijiao" v-if="active===1">提  交</el-button>
         </span>
     </el-dialog>
   </div>
@@ -168,13 +170,23 @@ export default {
         ],
         idnumber: [
           { required: true, message: '请输入身份证', trigger: 'blur' },
-          { type: 'number', message: '请输入数字', trigger: 'blur' },
-          { min: 18, max: 18, message: '长为18个字符', trigger: 'blur' }
+          // { type: 'number', message: '请输入数字', trigger: 'blur' },
+          { min: 18, max: 18, message: '长为18个字符', trigger: 'blur' },
+          {
+            pattern: /(^[1-9]\d{5}(18|19|([23]\d))\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{3}[0-9Xx]$)|(^[1-9]\d{5}\d{2}((0[1-9])|(10|11|12))(([0-2][1-9])|10|20|30|31)\d{2}$)/,
+            message: '证件号码格式有误！',
+            trigger: 'blur'
+          }
         ],
         mobile: [
           { required: true, message: '请输入手机号', trigger: 'blur' },
-          { type: 'number', message: '请输入数字', trigger: 'blur' },
-          { min: 11, max: 11, message: '长为11个字符', trigger: 'blur' }
+          // { type: 'number', message: '请输入数字', trigger: 'blur' },
+          { min: 11, max: 11, message: '长为11个字符', trigger: 'blur' },
+          {
+            pattern: /^1(3|4|5|6|7|8|9)\d{9}$/,
+            message: '手机号格式不对',
+            trigger: 'blur'
+          }
         ],
         permanent: [
           { required: true, message: '请输入户籍地址', trigger: 'blur' }
@@ -244,17 +256,39 @@ export default {
       this.plist(this.search, this.page_size, this.p)
       console.log(`当前页: ${val}`)
     },
-    quxiao (formName) {
+    quxiao () {
       this.addswitch = false
       this.addData = false
-      this.$refs[formName].resetFields()
+      // this.$refs[formName].resetFields()
+      this.$refs.addForm.resetFields()
       this.addForm = { 'user': 1 }
       this.dataselect = []
     },
     tijiao () {
       this.addswitch = false
-      this.addData = false
       this.dataselect = []
+      this.$http.post('PersonalInformationList',
+        this.addForm)
+        .then(req => {
+          if (req.status === 201) {
+            this.$message.warning('创建' + '  ' + req.data.idnumber + '-' + req.data.name + '  ' + '成功')
+            // 关闭对话框
+            this.addData = false
+            // 重新获取列表
+            this.plist(this.search)
+          }
+        })
+        .catch(err => {
+          if (err.response.status === 406) {
+            this.$message.warning(err.response.data.message)
+          }
+          if (err.response.status === 400) {
+            var x
+            for (x in err.response.data) {
+              this.$message.warning('' + err.response.data[x])
+            }
+          }
+        })
     },
     addfrom () {
       this.active = 0
@@ -280,7 +314,7 @@ export default {
       if (--this.active > 1) this.active = 0
     },
     submitForm (formName) {
-      this.$refs[formName].validate((valid) => {
+      this.$refs.addForm.validate((valid) => {
         if (valid) {
           if (this.active++ > 1) this.active = 0
         } else {
