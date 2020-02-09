@@ -16,8 +16,8 @@
         <!-- 菜单区域 -->
         <div class="toggle-button">
           <span @click="menubutton">
-            <i v-if="isCollapse" class="el-icon-d-arrow-right"/>
-            <i v-else class="el-icon-d-arrow-left"/>
+            <i v-if="isCollapse" class="el-icon-s-unfold"/>
+            <i v-else class="el-icon-s-fold"/>
           </span>
         </div>
         <el-menu

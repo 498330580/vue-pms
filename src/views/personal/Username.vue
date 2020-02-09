@@ -1,5 +1,7 @@
 <template>
     <div>
+        <!--  表头  -->
+        {{fenzu}}
         <el-row :gutter="25">
             <el-col :span="7">
                 <el-input
@@ -21,7 +23,7 @@
                 height="580"
                 border
                 stripe
-                style="width: 100%">
+                style="width: 100%" @filter-change="filterChange">
             <el-table-column type="index" label="序号" width="60" align="center"/>
             <el-table-column prop="idnumber" label="身份证" width="180" align="center"/>
             <el-table-column prop="name" label="姓名" width="100" align="center"/>
@@ -32,9 +34,20 @@
                     {{getAge(scope.row.birthday)}}
                 </template>
             </el-table-column>
+            <el-table-column prop="dangtuans[0].politics.name" label="政治面貌" width="80" align="center"/>
             <el-table-column prop="mobile" label="电话" width="150" align="center"/>
-            <el-table-column prop="home" label="通讯地址" width="350" align="center"/>
-            <el-table-column prop="zhuangtai" label="人员状态" width="250" align="center"/>
+            <el-table-column prop="permanent" label="户籍地址" width="330" align="center"/>
+            <el-table-column prop="jiguan.jiguan" label="籍贯" width="110" align="center"/>
+            <el-table-column prop="home" label="通讯地址" width="330" align="center"/>
+            <el-table-column prop="drivinglicense.name" label="驾照" width="80" align="center"/>
+            <el-table-column prop="yonggongs[0].zhuangtai.name" label="人员状态" width="80" align="center"/>
+            <el-table-column prop="yonggongs[0].shenfenguilei.name" label="人员类别" width="80" align="center"/>
+            <el-table-column prop="dadui.name" label="所属大队" width="80" align="center"
+                             :filters="dadui" :column-key="'dadui'" :filter-multiple="false"/>
+            <el-table-column prop="fenzu.name" label="所属中队" width="110" align="center"
+                             :filters="fenzu" :column-key="'fenzu'" :filter-multiple="false"/>
+            <el-table-column prop="jiediao.name" label="是否借调" width="130" align="center"/>
+            <el-table-column prop="bianzhi.name" label="编制位置" width="80" align="center"/>
             <el-table-column label="操作" align="center" fixed="right" width="180">
                 <template slot-scope="scope">
                     <el-tooltip class="item" effect="dark" content="修改" placement="left" :enterable="false">
@@ -64,7 +77,7 @@
                 width="60%" :show-close="false" :destroy-on-close="true" :close-on-press-escape="false"
                 :close-on-click-modal="false"
                 center>
-            <el-form :model="modifyinfo" :rules="addrules" ref="modifyinfo" label-width="80px">
+            <el-form :model="modifyinfo" :rules="addrules" ref="modifyinfo" label-width="80px" :disabled="fromdisabled">
                 <el-row :gutter="24">
                     <el-col :span="12">
                         <el-form-item label="账号" prop="user">
@@ -106,7 +119,11 @@
                     </el-col>
                 </el-row>
             </el-form>
-            <span slot="footer" class="dialog-footer">
+            <span slot="footer" class="dialog-footer" v-if="fromdisabled">
+              <el-button @click="modifyquxiao">关  闭</el-button>
+              <el-button type="primary" @click="fromdisabled = false">修  改</el-button>
+            </span>
+            <span slot="footer" class="dialog-footer" v-else>
               <el-button @click="modifyquxiao">取 消</el-button>
               <el-button type="primary" @click="modifytijiao">确 定</el-button>
             </span>
@@ -163,9 +180,9 @@
             </el-form>
             <!--  底部确认区域  -->
             <span slot="footer" class="dialog-footer">
-          <el-button @click="quxiao">取  消</el-button>
-          <el-button type="primary" @click="tijiao">提  交</el-button>
-        </span>
+              <el-button @click="quxiao">取  消</el-button>
+              <el-button type="primary" @click="tijiao">提  交</el-button>
+            </span>
         </el-dialog>
     </div>
 </template>
@@ -180,6 +197,14 @@ export default {
       page_size: 10,
       datalist: [],
       count: null,
+      // 大队中队小组分类数据
+      dadui: [],
+      fenzu: [],
+      filters: {},
+      // 是否可以添加数据
+      adddisabled: true,
+      // 表单是否可编辑
+      fromdisabled: true,
       // 修改数据
       // 判断是否弹窗
       modifyData: false,
@@ -233,13 +258,47 @@ export default {
     }
   },
   methods: {
+    // 大队中队分类数据获取
+    async daduizhongdilist (category, id) {
+      await this.$http.get('DaduiZhongduiTypeList', {
+        params: {
+          category_type: category,
+          parent_category: id
+        }
+      }).then(req => {
+        const persons = req.data
+        if (category === '大队') {
+          for (let i = 0; i < persons.length; i++) {
+            const dic = {}
+            // console.log(persons[i])
+            dic['text'] = persons[i].name
+            dic['value'] = persons[i].id
+            this.dadui.push(dic)
+          }
+        } else {
+          for (let i = 0; i < persons.length; i++) {
+            const dic = {}
+            // console.log(persons[i])
+            dic['text'] = persons[i].name
+            dic['value'] = persons[i].id
+            this.fenzu.push(dic)
+          }
+        }
+      }).catch(err => {
+        console.log(err)
+        this.$message.warning('获取大队、中队数据失败')
+        return []
+      })
+    },
     // 人员信息获取
-    plist: async function (search, size, p) {
+    plist: async function (search, size, p, dadui, fenzu) {
       await this.$http.get('PersonalInformationList', {
         params: {
           search: search,
           page_size: size,
-          p: p
+          p: p,
+          dadui: dadui,
+          fenzu: fenzu
         }
       })
         .then(req => {
@@ -326,7 +385,7 @@ export default {
         if (req.status === 200) {
           this.modifyData = true
           this.modifyinfo = req.data
-          this.userlist(this.modifyinfo.user)
+          this.userlist(this.modifyinfo.user.id)
         } else {
           console.log(req)
           this.$message.warning('无法获取个人数据')
@@ -343,6 +402,7 @@ export default {
       this.dataselect = []
       this.modifydisabled = false
       this.modifyinfo = {}
+      this.fromdisabled = true
     },
     // 提交
     modifytijiao () {
@@ -351,6 +411,7 @@ export default {
       this.dataselect = []
       this.modifydisabled = false
       this.modifyinfo = {}
+      this.fromdisabled = true
     },
     // 以下为添加数据弹窗函数
     // 取消弹出框
@@ -381,6 +442,7 @@ export default {
               }
             })
             .catch(err => {
+              console.log(err.response)
               if (err.response.status === 406) {
                 this.$message.warning(err.response.data.message)
               }
@@ -411,9 +473,33 @@ export default {
       this.dataselect = []
       this.modifydisabled = false
       this.modifyinfo = {}
+    },
+    // 列表筛选设置
+    filterChange (val) {
+      console.log('筛选')
+      // console.log(val.hasOwnProperty('dadui'))
+      if (val.hasOwnProperty('dadui')) {
+        this.filters['dadui'] = val.dadui[0]
+        if (val.dadui[0] === undefined) {
+          this.fenzu = []
+        } else {
+          this.daduizhongdilist('', val.dadui[0])
+        }
+      }
+      if (val.hasOwnProperty('fenzu')) {
+        this.filters['fenzu'] = val.fenzu[0]
+      }
+      console.log(this.filters)
+      this.plist(this.search, this.page_size, this.p, this.filters['dadui'], this.filters['fenzu'])
+      // if (this.filters['dadui'].length === 0) {
+      //   this.fenzu = []
+      // }
     }
   },
   created () {
+    this.daduizhongdilist('大队')
+    // this.daduizhongdilist('中队')
+    // this.daduizhongdilist('小组')
     this.plist()
   }
 }
