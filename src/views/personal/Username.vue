@@ -79,14 +79,14 @@
             <el-table-column label="人员状态" width="100" align="center"
                              :filters="ZhuangTai" :column-key="'ZhuangTai'" :filter-multiple="false">
                 <template slot-scope="scope">
-                    <span  v-if="scope.row.yonggongs.length !== 0">{{scope.row.yonggongs[0].zhuangtai.name}}</span>
+                    <span v-if="scope.row.yonggongs.length !== 0">{{scope.row.yonggongs[0].zhuangtai.name}}</span>
                     <el-tag v-else type="warning">无数据</el-tag>
                 </template>
             </el-table-column>
             <el-table-column label="人员类别" width="100" align="center"
                              :filters="CategoryType" :column-key="'CategoryType'" :filter-multiple="false">
                 <template slot-scope="scope">
-                    <span  v-if="scope.row.yonggongs.length !== 0">{{scope.row.yonggongs[0].shenfenguilei.name}}</span>
+                    <span v-if="scope.row.yonggongs.length !== 0">{{scope.row.yonggongs[0].shenfenguilei.name}}</span>
                     <el-tag v-else type="warning">无数据</el-tag>
                 </template>
             </el-table-column>
@@ -763,7 +763,9 @@ export default {
       }
       if (val.hasOwnProperty('fenzu')) {
         this.filters['fenzu'] = val.fenzu[0]
-      } else { this.filters['fenzu'] = '' }
+      } else {
+        this.filters['fenzu'] = ''
+      }
       // 性别获取
       if (val.hasOwnProperty('sex')) {
         this.filters['sex'] = val.sex[0]
