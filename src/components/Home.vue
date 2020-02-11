@@ -76,7 +76,7 @@ export default {
     return {
       menulist: [],
       // 默认打开折叠菜单
-      isCollapse: false,
+      isCollapse: true,
       menupath: '',
       breadcrumb: []
     }
