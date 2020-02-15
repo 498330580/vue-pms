@@ -86,7 +86,6 @@ export default {
               window.sessionStorage.setItem('superuser', req.data.superuser)
               window.sessionStorage.setItem('pmsuserid', req.data.ID)
               window.sessionStorage.setItem('pmsstaff', req.data.staff)
-              console.log(req.data)
               this.$message.success('登录成功')
               // 登录成功后跳转到主页
               this.$router.push('/home')

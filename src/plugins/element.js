@@ -2,7 +2,7 @@ import Vue from 'vue'
 import {
   Button, Form, Input, FormItem, Message, Container, Aside, Header, Main, Footer, Menu,
   Submenu, MenuItem, Breadcrumb, BreadcrumbItem, Card, Row, Col, Table, TableColumn, Switch, Tooltip, Pagination,
-  Dialog, Option, Select, Step, Steps, Loading, Tag
+  Dialog, Option, Select, Step, Steps, Loading, Tag, Popover
 } from 'element-ui'
 
 Vue.use(Button)
@@ -35,4 +35,5 @@ Vue.use(Step)
 Vue.use(Steps)
 Vue.use(Loading)
 Vue.use(Tag)
+Vue.use(Popover)
 // Vue.use(MenuItemGroup)

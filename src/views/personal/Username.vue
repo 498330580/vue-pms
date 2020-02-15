@@ -1,5 +1,5 @@
 <template>
-    <div>
+    <div v-if="permission.usersview || userdata.is_superuser">
         <!--  表头  -->
         <el-row :gutter="24">
             <!--搜索框-->
@@ -14,13 +14,17 @@
                 </el-input>
             </el-col>
             <!--按钮-->
-            <el-col :span="12">
+            <el-col :span="14">
                 <!--添加数据按钮-->
-                <el-button type="primary" icon="el-icon-circle-plus-outline" @click="addfrom">添加数据</el-button>
+                <el-button type="primary" icon="el-icon-circle-plus-outline" @click="modify('', '添加')"
+                           v-if="permission.usersadd || userdata.is_superuser">添加数据
+                </el-button>
                 <!--清空筛选按钮-->
                 <el-button type="primary" icon="el-icon-delete" @click="clearFilter">清空所有筛选</el-button>
                 <!--重新加载数据按钮-->
                 <el-button type="primary" icon="el-icon-refresh" @click="shuaxin">刷新数据</el-button>
+                <!-- 加载被标记删除数据 -->
+                <el-button type="primary" icon="el-icon-refresh" @click="deldata">显示标记删除数据</el-button>
             </el-col>
             <el-button type="primary" plain @click="ceshi">测试数据用</el-button>
         </el-row>
@@ -105,19 +109,53 @@
             <el-table-column prop="dadui.name" label="所属大队" width="100" align="center"
                              :filters="dadui" :column-key="'dadui'" :filter-multiple="false"/>
             <el-table-column prop="fenzu.name" label="所属中队" width="110" align="center"
-                             :filters="fenzu" :column-key="'fenzu'" :filter-multiple="false"/>
+                             :filters="fenzu" :column-key="'fenzu'" :filter-multiple="false">
+                <template slot-scope="scope">
+                    <span v-if="scope.row.fenzu !== null">
+                        {{scope.row.fenzu.name}}
+                    </span>
+                    <el-tag v-else type="warning">未选择</el-tag>
+                </template>
+            </el-table-column>
             <el-table-column prop="jiediao.name" label="是否借调" width="130" align="center"
                              :filters="Borrow" :column-key="'Borrow'" :filter-multiple="false"/>
             <el-table-column prop="bianzhi.name" label="编制位置" width="100" align="center"
                              :filters="Borrow" :column-key="'Borrow'" :filter-multiple="false"/>
-            <el-table-column label="操作" align="center" fixed="right" width="180">
+            <el-table-column label="操作" align="center" fixed="right" width="200">
                 <template slot-scope="scope">
-                    <el-tooltip class="item" effect="dark" content="修改" placement="left" :enterable="false">
-                        <el-button type="primary" icon="el-icon-edit" size="mini" @click="modify(scope.row.idnumber)"/>
-                    </el-tooltip>
-                    <el-tooltip class="item" effect="dark" content="删除" placement="right" :enterable="false">
-                        <el-button type="danger" icon="el-icon-delete" size="mini"/>
-                    </el-tooltip>
+                    <span v-if="userdata.is_staff || userdata.is_superuser">
+                        <span v-if="scope.row.is_delete">
+                            <el-tooltip class="item" effect="dark" content="取消删除" placement="left" :enterable="false">
+                                <el-button type="success" icon="el-icon-refresh-left" size="mini"
+                                           @click="nodelete(scope.row.id, 'no')"
+                                           v-if="permission.userschange || userdata.is_superuser"/>
+                            </el-tooltip>
+                            <el-tooltip class="item" effect="dark" content="彻底删除" placement="right" :enterable="false">
+                                <el-button type="danger" icon="el-icon-delete" size="mini"
+                                           @click="nodelete(scope.row.id, 'true')"
+                                           v-if="permission.usersdelete || userdata.is_superuser"/>
+                            </el-tooltip>
+                        </span>
+                        <span v-else>
+                            <el-tooltip class="item" effect="dark" content="修改/查看" placement="left" :enterable="false">
+                                <el-button type="primary" icon="el-icon-edit" size="mini"
+                                           @click="modify(scope.row.id, '查看')"
+                                           v-if="permission.usersview || userdata.is_superuser"/>
+                            </el-tooltip>
+                            <el-tooltip class="item" effect="dark" content="删除" placement="right" :enterable="false">
+                                <el-button type="warning" icon="el-icon-delete" size="mini"
+                                           @click="nodelete(scope.row.id, 'false')"
+                                           v-if="permission.userschange || userdata.is_superuser"/>
+                            </el-tooltip>
+                        </span>
+                    </span>
+                    <span v-else>
+                        <el-tooltip class="item" effect="dark" content="修改/查看" placement="left" :enterable="false">
+                            <el-button type="primary" icon="el-icon-edit" size="mini"
+                                       @click="modify(scope.row.id, '查看')"
+                                       v-if="permission.usersview || userdata.is_superuser"/>
+                        </el-tooltip>
+                    </span>
                 </template>
             </el-table-column>
         </el-table>
@@ -132,9 +170,9 @@
                 :total="count">
         </el-pagination>
 
-        <!-- 修改/修改数据数据弹窗 -->
+        <!-- 查看/修改/添加数据数据数据弹窗 -->
         <el-dialog
-                :title="fromdisabled?'查看数据':'修改数据'"
+                :title="dialogtitle"
                 :visible.sync="modifyData" label-width="70px"
                 width="60%" :show-close="false" :destroy-on-close="true" :close-on-press-escape="false"
                 :close-on-click-modal="false" :close="modifyquxiao"
@@ -181,7 +219,10 @@
                 <el-row :gutter="24">
                     <el-col :span="4">
                         <el-form-item label="民族" prop="nation">
-                            <el-input v-model="modifyinfo.nation"/>
+                            <el-select v-model="modifyinfo.nation">
+                                <el-option v-for="nation in nationlist" :key="nation.name" :label=nation.name
+                                           :value="nation.name"/>
+                            </el-select>
                         </el-form-item>
                     </el-col>
                     <el-col :span="4">
@@ -207,7 +248,7 @@
                 </el-row>
                 <el-row :gutter="24">
                     <el-col :span="8">
-                        <el-form-item label="爱好/特长" prop="hobby">
+                        <el-form-item label="爱好特长" prop="hobby">
                             <el-input v-model="modifyinfo.hobby"/>
                         </el-form-item>
                     </el-col>
@@ -282,7 +323,7 @@
                     </el-col>
                     <el-col :span="8">
                         <el-form-item label="中队/小组" prop="fenzu">
-                            <el-select v-model="modifyinfo.fenzu">
+                            <el-select v-model="modifyinfo.fenzu" clearable>
                                 <el-option v-for="fuzu in fenzu" :key="fuzu.value" :label=fuzu.text
                                            :value="fuzu.value"/>
                             </el-select>
@@ -337,72 +378,24 @@
                     </el-col>
                 </el-row>
             </el-form>
-            <span slot="footer" class="dialog-footer" v-if="fromdisabled">
-              <el-button @click="modifyquxiao">关  闭</el-button>
-              <el-button type="primary" @click="fromdisabled = false">修  改</el-button>
+            <span slot="footer" class="dialog-footer" v-if="dialogtitle==='添加个人数据'">
+                <el-button @click="modifyquxiao">取 消</el-button>
+                <el-button type="primary" @click="modifytijiao('', '添加')">提  交</el-button>
             </span>
             <span slot="footer" class="dialog-footer" v-else>
-              <el-button @click="modifyquxiao">取 消</el-button>
-              <el-button type="primary" @click="modifytijiao">提  交</el-button>
-            </span>
-        </el-dialog>
-
-        <!-- 添加数据提示框 -->
-        <el-dialog
-                title="添加个人数据"
-                :visible.sync="addData"
-                width="60%" :show-close="false" :destroy-on-close="true" :close-on-press-escape="false"
-                :close-on-click-modal="false" :close="xiaohui"
-                center>
-            <!--  内容区域  -->
-            <el-form :model="modifyinfo" :rules="addrules" ref="addForm" label-width="80px">
-                <el-row :gutter="24">
-                    <el-col :span="12">
-                        <el-form-item label="账号" prop="user">
-                            <el-select v-model="modifyinfo.user" :disabled="modifydisabled">
-                                <el-option v-for="user in dataselect" :key="user.id" :label=user.username
-                                           :value="user.id"/>
-                            </el-select>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-                <el-row :gutter="24">
-                    <el-col :span="6">
-                        <el-form-item label="姓名" prop="name">
-                            <el-input v-model="modifyinfo.name"/>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="6">
-                        <el-form-item label="手机号" prop="mobile">
-                            <el-input v-model="modifyinfo.mobile"/>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="10">
-                        <el-form-item label="身份证" prop="idnumber">
-                            <el-input v-model="modifyinfo.idnumber"/>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-                <el-row :gutter="24">
-                    <el-col :span="12">
-                        <el-form-item label="户籍地址" prop="permanent">
-                            <el-input v-model="modifyinfo.permanent"/>
-                        </el-form-item>
-                    </el-col>
-                    <el-col :span="12">
-                        <el-form-item label="通讯地址" prop="home">
-                            <el-input v-model="modifyinfo.home"/>
-                        </el-form-item>
-                    </el-col>
-                </el-row>
-            </el-form>
-            <!--  底部确认区域  -->
-            <span slot="footer" class="dialog-footer">
-              <el-button @click="quxiao">取  消</el-button>
-              <el-button type="primary" @click="tijiao">提  交</el-button>
+                <span slot="footer" class="dialog-footer" v-if="fromdisabled">
+                  <el-button @click="modifyquxiao">关  闭</el-button>
+                  <el-button type="primary" @click="xiugai"
+                             :disabled="!permission.userschange">修  改</el-button>
+                </span>
+                <span slot="footer" class="dialog-footer" v-else>
+                  <el-button @click="modifyquxiao">取 消</el-button>
+                  <el-button type="primary" @click="modifytijiao(modifyinfo.id, '修改')">提  交</el-button>
+                </span>
             </span>
         </el-dialog>
     </div>
+    <div v-else style="height: 750px;" align="center"><h1>{{notdata}}</h1></div>
 </template>
 
 <script>
@@ -415,6 +408,16 @@ export default {
       page_size: 10,
       datalist: [],
       count: null,
+      permission: { 'usersadd': false, 'usersview': false },
+      userdata: { 'is_superuser': false },
+      // 民族数据
+      nationlist: [],
+      // 添加、修改、查看数据弹窗标题
+      dialogtitle: '',
+      // 页面无数据提示
+      notdata: '',
+      // 删除窗口控制
+      delvisible: false,
       // 类目列表
       Type: [],
       // 籍贯列表
@@ -444,7 +447,8 @@ export default {
         'DrivingLicenseType': '',
         'Organization': '',
         'Borrow': '',
-        'CategoryType': ''
+        'CategoryType': '',
+        'is_delete': false
       },
       // 是否可以添加数据
       adddisabled: true,
@@ -471,7 +475,8 @@ export default {
           { min: 2, max: 5, message: '长度在 2 到 5 个字符', trigger: 'blur' }
         ],
         named: [
-          { min: 3, max: 5, message: '长度在 3 到 5 个字符', trigger: 'blur' }
+          { required: true, message: '请输入曾用名，没有请填写“无”', trigger: 'blur' },
+          { min: 1, max: 5, message: '长度在 1 到 5 个字符', trigger: 'blur' }
         ],
         idnumber: [
           { required: true, message: '请输入身份证', trigger: 'blur' },
@@ -498,15 +503,61 @@ export default {
         ],
         home: [
           { required: true, message: '请输入通讯地址', trigger: 'blur' }
+        ],
+        idfj: [
+          { required: true, message: '没有请填写“无”', trigger: 'blur' }
+        ],
+        nation: [
+          { required: true, message: '请输入民族', trigger: 'blur' }
+        ],
+        hobby: [
+          { required: true, message: '没有请填写“无”', trigger: 'blur' }
+        ],
+        permanenttype: [
+          { required: true, message: '请输入户籍类别', trigger: 'blur' }
+        ],
+        veteran: [
+          { required: true, message: '请选择退役类别', trigger: 'blur' }
+        ],
+        marriage: [
+          { required: true, message: '请选择婚姻状态', trigger: 'blur' }
+        ],
+        drivinglicense: [
+          { required: true, message: '请选驾照', trigger: 'blur' }
+        ],
+        dadui: [
+          { required: true, message: '请选所属大队', trigger: 'blur' }
+        ],
+        jiediao: [
+          { required: true, message: '请选借调位置', trigger: 'blur' }
+        ],
+        bianzhi: [
+          { required: true, message: '请选编制位置', trigger: 'blur' }
+        ],
+        economics: [
+          { required: true, message: '请选家庭经济状态', trigger: 'blur' }
+        ],
+        sources: [
+          { required: true, message: '请选家庭经济来源', trigger: 'blur' }
+        ],
+        beizhu: [
+          { required: true, message: '没有请填写“无”', trigger: 'blur' }
         ]
       }
     }
   },
   methods: {
-    // 分组数据选择（修改数据页面用）
-    modifyfenzu (id) {
-      this.modifyinfo.fenzu = null
-      this.typelist('', id)
+    // 名族分类获取
+    async minzu () {
+      await this.$http.get('Nation')
+        .then(req => {
+          if (req.status === 200) {
+            this.nationlist = req.data
+          }
+        }).catch(err => {
+          console.log(err)
+          this.$message.error('加载名族数据出错！')
+        })
     },
     // 大队分类数据获取
     async typelist (category, parent) {
@@ -527,12 +578,14 @@ export default {
           }
         } else {
           this.fenzu = []
-          for (let i = 0; i < persons.length; i++) {
-            const dic = {}
-            // console.log(persons[i])
-            dic['text'] = persons[i].name
-            dic['value'] = persons[i].id
-            this.fenzu.push(dic)
+          if (parent !== null) {
+            for (let i = 0; i < persons.length; i++) {
+              const dic = {}
+              // console.log(persons[i])
+              dic['text'] = persons[i].name
+              dic['value'] = persons[i].id
+              this.fenzu.push(dic)
+            }
           }
         }
       }).catch(err => {
@@ -543,7 +596,8 @@ export default {
     },
     // 人员信息获取
     plist: async function (search, size, p) {
-      // this.tableloading = true
+      // console.log(this.userdata.is_superuser)
+      // if (!this.permission.usersview || !this.userdata.is_superuser) return
       await this.$http.get('PersonalInformationList', {
         params: {
           search: search,
@@ -558,32 +612,70 @@ export default {
           drivinglicense__name: this.filters['DrivingLicenseType'],
           bianzhi__name: this.filters['Organization'],
           jiediao__name: this.filters['Borrow'],
-          yonggongs__shenfenguileinot__name: this.filters['CategoryType']
+          yonggongs__shenfenguileinot__name: this.filters['CategoryType'],
+          is_delete: this.filters['is_delete']
         }
       })
         .then(req => {
+          // console.log(this.dadui)
           this.datalist = req.data.results
           this.count = req.data.count
           if (req.data.count === 0) {
-            this.$message.warning('无数据')
+            if (this.permission.usersview || this.userdata.is_superuser) {
+              this.$message.warning('无数据')
+            } else {
+              this.$message.warning('无数据，请联系管理员查看是否有数据查询权限!')
+              this.notdata = '无数据，请联系管理员查看是否有数据查询权限!'
+            }
           } else {
             this.tableloading = false
           }
         })
         .catch(error => {
-          this.$message.warning('获取数据失败')
+          this.$message.error('获取数据失败')
           console.log(error)
         })
     },
-    // 获取当前用户数据
-    async userone (id) {
-      this.$http.get('UserInformation/' + id).then(req => {
-        if (req.status === 200) {
-          this.dataselect.unshift(req.data)
+    // 取消标记删除/彻底删除/标记删除
+    async nodelete (id, del) {
+      await this.$http.delete('PersonalInformationList/' + id, {
+        params: { 'del': del }
+      }).then(req => {
+        if (req.status === 204) {
+          // this.plist(this.search, this.page_size, this.p)
+          this.plist()
+          this.$message.success('操作成功')
+        } else {
+          this.$message.warning('操作失败')
         }
       }).catch(err => {
         console.log(err)
+        this.$message.error('操作失败')
       })
+    },
+    // 获取用户数据
+    async userone (id, one, key) {
+      this.$http.get('UserInformation/' + id, {
+        params: { permission: key }
+      })
+        .then(req => {
+          if (req.status === 200) {
+            if (one === '当前登录用户') {
+              if (key) {
+                this.permission = req.data
+              } else {
+                this.userdata = req.data
+              }
+              // this.is_superuser = req.data.is_superuser
+              // this.is_staff = req.data.is_staff
+            } else {
+              this.dataselect.unshift(req.data)
+            }
+          }
+        })
+        .catch(err => {
+          console.log(err)
+        })
     },
     // 未启用账号获取
     async userlist (userid) {
@@ -600,14 +692,12 @@ export default {
           } else {
             // 存在多个未分配账号
             this.dataselect = req.data
-            let staff = window.sessionStorage.getItem('pms')
-            let superuser = window.sessionStorage.getItem('superuser')
             if (userid) {
               this.userone(userid)
             } else {
               this.dataselect.unshift({ 'id': 1, 'username': '自动生成账号' })
             }
-            this.modifydisabled = !(staff || superuser)
+            this.modifydisabled = !(this.userdata.is_staff || this.userdata.is_superuser)
           }
         })
         .catch(err => {
@@ -631,120 +721,124 @@ export default {
       this.page_size = val
       this.p = 1
       this.plist(this.search, this.page_size, this.p)
-      console.log(`每页 ${val} 条`)
+      // console.log(`每页 ${val} 条`)
     },
     // 页码判断
     handleCurrentChange (val) {
       this.p = val
       this.plist(this.search, this.page_size, this.p)
-      console.log(`当前页: ${val}`)
+      // console.log(`当前页: ${val}`)
     },
     // 以下为修改数据弹窗函数
-    // 编辑按钮
-    async modify (idnumber) {
-      await this.$http.get(
-        'PersonalInformationList/' + idnumber
-      ).then(req => {
-        if (req.status === 200) {
-          this.modifyData = true
-          this.modifyinfo = req.data
-          this.typelist('', this.modifyinfo.dadui)
-          this.userlist(this.modifyinfo.user)
-        } else {
-          console.log(req)
-          this.$message.warning('无法获取个人数据')
-        }
-      }).catch(err => {
-        console.log(err)
-        this.$message.warning('获取数据错误')
-      })
+    // 查看、编辑、添加按钮
+    async modify (id, type) {
+      if (type === '查看') {
+        this.dialogtitle = '查看数据'
+        await this.$http.get(
+          'PersonalInformationList/' + id
+        ).then(req => {
+          if (req.status === 200) {
+            this.modifyData = true
+            this.modifyinfo = req.data
+            this.typelist('', this.modifyinfo.dadui)
+            this.userlist(this.modifyinfo.user)
+          } else {
+            console.log(req)
+            this.$message.warning('无法获取个人数据')
+          }
+        }).catch(err => {
+          console.log(err)
+          this.$message.warning('获取数据错误')
+        })
+      }
+      if (type === '添加' && id === '') {
+        this.dialogtitle = '添加个人数据'
+        this.modifyData = true
+        this.fromdisabled = false
+        this.modifyinfo = { 'user': 1 }
+        this.dataselect.unshift({ 'id': 1, 'username': '自动生成账号' })
+        this.userlist()
+      }
+    },
+    // 数据修改按钮
+    xiugai () {
+      this.fromdisabled = !this.fromdisabled
+      this.dialogtitle = '修改数据'
+    },
+    // 分组数据选择（修改数据页面用）
+    modifyfenzu (id) {
+      this.modifyinfo.fenzu = null
+      this.typelist('', id)
     },
     // 取消
     modifyquxiao () {
       // 重置数据
-      // this.tableloading = true
+      this.$refs.modifyinfo.resetFields()
       this.modifyData = false
       this.dataselect = []
+      this.fromdisabled = true
       this.modifydisabled = false
       this.modifyinfo = {}
-      this.fromdisabled = true
-      this.dadui = []
+      this.dialogtitle = ''
       this.fenzu = []
     },
     // 提交
-    modifytijiao () {
-      // 重置数据
-      this.modifyData = false
-      this.dataselect = []
-      this.modifydisabled = false
-      this.modifyinfo = {}
-      this.fromdisabled = true
-      this.dadui = []
-      this.fenzu = []
-    },
-    // 以下为添加数据弹窗函数
-    // 取消弹出框
-    quxiao () {
-      this.$refs.addForm.resetFields()
-      // 重置数据
-      this.addData = false
-      this.dataselect = []
-      this.modifydisabled = false
-      this.modifyinfo = {}
-      this.dadui = []
-      this.fenzu = []
-    },
-    // 提交弹出框数据
-    tijiao () {
-      this.tableloading = true
-      this.$refs.addForm.validate((valid) => {
+    modifytijiao (id, tjtype) {
+      this.$refs.modifyinfo.validate(async valid => {
         if (valid) {
-          this.$http.post('PersonalInformationList',
-            this.modifyinfo)
-            .then(req => {
-              if (req.status === 201) {
-                this.$message.warning('创建' + '  ' + req.data.idnumber + '-' + req.data.name + '  ' + '成功')
-                // 重置数据
-                this.addData = false
-                this.dataselect = []
-                this.modifydisabled = false
-                this.modifyinfo = {}
-                // 重新获取列表
-                this.plist(this.search, this.page_size, this.p)
-              }
-            })
-            .catch(err => {
-              console.log(err.response)
-              if (err.response.status === 406) {
-                this.$message.warning(err.response.data.message)
-              }
-              if (err.response.status === 400) {
-                let x
-                for (x in err.response.data) {
-                  this.$message.warning('' + err.response.data[x])
+          // 提交修改用户数据
+          if (tjtype === '修改') {
+            await this.$http.patch('PersonalInformationList/' + id,
+              this.modifyinfo)
+              .then(req => {
+                if (req.status === 200) {
+                  this.$message.success('修改' + '  ' + req.data.idnumber + '-' + req.data.name + '  ' + '成功')
+                  this.modifyquxiao()
                 }
-              }
-            })
+              })
+              .catch(err => {
+                console.log(err)
+                if (err.response.status === 400 || err.response.status === 403) {
+                  let x
+                  for (x in err.response.data) {
+                    this.$message.error(x + '' + err.response.data[x])
+                  }
+                } else {
+                  this.$message.error('修改出错')
+                }
+              })
+          }
+          // 提交添加用户数据
+          if (id === '' && tjtype === '添加') {
+            await this.$http.post('PersonalInformationList', this.modifyinfo)
+              .then(req => {
+                if (req.status === 201) {
+                  this.$message.success('创建' + '  ' + req.data.idnumber + '-' + req.data.name + '  ' + '成功')
+                  this.modifyquxiao()
+                } else {
+                  this.$message.error('错误：创建失败')
+                  console.log(req)
+                }
+              })
+              .catch(err => {
+                console.log(err.response)
+                if (err.response.status === 406) {
+                  this.$message.error(err.response.data.message)
+                }
+                if (err.response.status === 400) {
+                  let x
+                  for (x in err.response.data) {
+                    this.$message.error(x + '' + err.response.data[x])
+                  }
+                }
+              })
+          }
+          this.plist()
         } else {
-          console.log('error submit!!')
-          this.$message.warning('数据错误')
+          console.log('提交数据出错')
+          this.$message.warning('请按照提示填写数据！！！')
         }
       })
-    },
-    // 添加数据按钮
-    addfrom () {
-      this.addData = true
-      this.modifyinfo = { 'user': 1 }
-      this.dataselect.unshift({ 'id': 1, 'username': '自动生成账号' })
-      this.userlist()
-    },
-    // 弹窗关闭回调
-    xiaohui () {
-      this.modifyData = false
-      this.addData = false
-      this.dataselect = []
-      this.modifydisabled = false
-      this.modifyinfo = {}
     },
     // 列表筛选设置
     filterChange (val) {
@@ -805,39 +899,26 @@ export default {
     },
     // 清空所有筛选按钮
     clearFilter () {
-      // console.log(this.$refs)
       this.$refs.filterTable.clearFilter()
-      this.filters = {
-        'dadui': '',
-        'fenzu': '',
-        'sex': '',
-        'Politics': '',
-        'ZhuangTai': '',
-        'DiZhi': '',
-        'DrivingLicenseType': '',
-        'Organization': '',
-        'Borrow': '',
-        'CategoryType': ''
-      }
-      // console.log(this.filters)
+      this.filters = this.$options.data().filters
       this.plist(this.search, this.page_size, this.p)
     },
     // 刷新数据
     shuaxin () {
       this.$refs.filterTable.clearFilter()
       this.tableloading = true
-      this.filters = {
-        'dadui': '',
-        'fenzu': '',
-        'sex': '',
-        'Politics': '',
-        'ZhuangTai': '',
-        'DiZhi': '',
-        'DrivingLicenseType': '',
-        'Organization': '',
-        'Borrow': '',
-        'CategoryType': ''
-      }
+      this.filters = this.$options.data().filters
+      this.page_size = 10
+      this.p = 1
+      this.plist()
+    },
+    // 显示标记删除人员
+    deldata () {
+      this.$refs.filterTable.clearFilter()
+      this.tableloading = true
+      this.filters['is_delete'] = true
+      this.page_size = 10
+      this.p = 1
       this.plist()
     },
     // 获取分类
@@ -889,14 +970,11 @@ export default {
           console.log(err)
         })
     },
-    // 获取籍贯信息
+    // 获取籍贯信息(数据库中已选择的)
     jiguanlist () {
       this.$http.get('DiZhiList')
         .then(req => {
-          // console.log(req.data)
           const persons = req.data
-          // this.jiguanselect = req.data
-          // console.log(this.jiguanselect)
           for (let i = 0; i < persons.length; i++) {
             const dic = {}
             dic['text'] = persons[i].jiguan
@@ -908,7 +986,7 @@ export default {
           console.log(err)
         })
     },
-    // 获取全部籍贯信息
+    // 获取全部籍贯信息(数据库中已选择，不管是否重复)
     jiguanlistall () {
       this.$http.get('DiZhiNotListAll')
         .then(req => {
@@ -942,12 +1020,16 @@ export default {
         })
     },
     ceshi () {
-      console.log(this.filters)
+      console.log(this.permission)
+      console.log(this.userdata)
     }
   },
   created () {
+    this.userone(window.sessionStorage.getItem('pmsuserid'), '当前登录用户')
+    this.userone(window.sessionStorage.getItem('pmsuserid'), '当前登录用户', 'users')
     this.typelist('大队')
     this.categorylist('人员类别')
+    this.minzu()
     this.typelists()
     this.jiguanlist()
     this.jiguanlistall()
